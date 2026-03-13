@@ -1,6 +1,8 @@
+"use client";
+
 import React, { useState } from 'react';
 import { useAppStore } from '../store/useAppStore';
-import { generateNextQuestion, analyzeRootCause } from '../services/aiService';
+import { generateNextQuestion } from '../services/aiService';
 import { ArrowRight, AlertCircle, CheckCircle2, ArrowLeft } from 'lucide-react';
 import { motion } from 'motion/react';
 
@@ -47,7 +49,17 @@ export function QuestionCard() {
     try {
       if (isLastQuestion) {
         // We reached 5 whys, generate analysis
-        const analysis = await analyzeRootCause(updatedConversation);
+        const response = await fetch('/api/analyze-root-cause', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ conversation: updatedConversation }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to analyze the root cause');
+        }
+
+        const analysis = await response.json();
         setAnalysis(analysis);
         setAppState('ANALYSIS_RESULTS');
       } else {
@@ -69,7 +81,17 @@ export function QuestionCard() {
     setError(null);
 
     try {
-      const analysis = await analyzeRootCause(conversation);
+      const response = await fetch('/api/analyze-root-cause', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ conversation }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to analyze the root cause');
+      }
+
+      const analysis = await response.json();
       setAnalysis(analysis);
       setAppState('ANALYSIS_RESULTS');
     } catch (err) {
@@ -82,7 +104,7 @@ export function QuestionCard() {
     <motion.div 
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
-      className="w-full max-w-2xl mx-auto p-6 bg-white rounded-2xl shadow-sm border border-slate-200"
+      className="w-full max-w-2xl mx-auto p-6 bg-white dark:bg-black rounded-2xl shadow-sm border border-slate-200 dark:border-zinc-800"
     >
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
@@ -90,16 +112,16 @@ export function QuestionCard() {
             type="button"
             onClick={goBack}
             disabled={isGenerating}
-            className="p-2 -ml-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors disabled:opacity-50"
+            className="p-2 -ml-2 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 rounded-full transition-colors disabled:opacity-50"
             title="Go back to previous step"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div className="flex items-center gap-2">
-            <span className="flex items-center justify-center w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 font-semibold text-sm">
+            <span className="flex items-center justify-center w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 font-semibold text-sm">
               {currentLevel}
             </span>
-            <span className="text-sm font-medium text-slate-500">of 5 Whys</span>
+            <span className="text-sm font-medium text-slate-500 dark:text-slate-400">of 5 Whys</span>
           </div>
         </div>
         
@@ -108,7 +130,7 @@ export function QuestionCard() {
             type="button"
             onClick={handleEarlyAnalysis}
             disabled={isGenerating}
-            className="text-sm text-indigo-600 hover:text-indigo-700 font-medium flex items-center gap-1 disabled:opacity-50"
+            className="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-medium flex items-center gap-1 disabled:opacity-50"
           >
             <CheckCircle2 className="w-4 h-4" />
             Analyze Now
@@ -116,26 +138,26 @@ export function QuestionCard() {
         )}
       </div>
 
-      <div className="mb-8">
-        <h3 className="text-xl font-medium text-slate-900 leading-relaxed">
+      <div className="mb-6 md:mb-8">
+        <h3 className="text-lg md:text-xl font-medium text-slate-900 dark:text-white leading-relaxed">
           {currentQuestion}
         </h3>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
         <div>
           <textarea
             value={answer}
             onChange={(e) => setAnswer(e.target.value)}
             placeholder="Type your answer here..."
-            className="w-full min-h-[120px] p-4 text-slate-900 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all resize-none"
+            className="w-full min-h-[100px] md:min-h-[120px] p-3 md:p-4 text-sm md:text-base text-slate-900 dark:text-slate-100 bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all resize-none placeholder:text-slate-400 dark:placeholder:text-slate-600"
             disabled={isGenerating}
             autoFocus
           />
         </div>
 
         {error && (
-          <div className="flex items-center gap-2 text-red-600 bg-red-50 p-3 rounded-lg">
+          <div className="flex items-center gap-2 text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 p-3 rounded-lg border border-red-100 dark:border-red-900/30">
             <AlertCircle className="w-5 h-5" />
             <span className="text-sm">{error}</span>
           </div>
@@ -144,7 +166,7 @@ export function QuestionCard() {
         <button
           type="submit"
           disabled={!answer.trim() || isGenerating}
-          className="w-full flex items-center justify-center gap-2 py-3 px-6 bg-slate-900 hover:bg-slate-800 text-white font-medium rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full flex items-center justify-center gap-2 py-3 px-6 bg-slate-900 dark:bg-indigo-600 hover:bg-slate-800 dark:hover:bg-indigo-700 text-white font-medium rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
         >
           {isGenerating ? (
             <span className="flex items-center gap-2">

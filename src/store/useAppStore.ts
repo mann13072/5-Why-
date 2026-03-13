@@ -1,3 +1,5 @@
+"use client";
+
 import { create } from 'zustand';
 import { AppState, Conversation, Step, Analysis } from '../types';
 
@@ -7,6 +9,7 @@ interface StoreState {
   currentQuestion: string;
   isGenerating: boolean;
   error: string | null;
+  theme: 'light' | 'dark';
   
   setAppState: (state: AppState) => void;
   setProblemStatement: (problem: string) => void;
@@ -15,6 +18,7 @@ interface StoreState {
   setAnalysis: (analysis: Analysis) => void;
   setIsGenerating: (isGenerating: boolean) => void;
   setError: (error: string | null) => void;
+  toggleTheme: () => void;
   goBack: () => void;
   reset: () => void;
 }
@@ -29,6 +33,7 @@ const initialState = {
   currentQuestion: '',
   isGenerating: false,
   error: null,
+  theme: 'light' as 'light' | 'dark',
 };
 
 export const useAppStore = create<StoreState>((set) => ({
@@ -52,6 +57,7 @@ export const useAppStore = create<StoreState>((set) => ({
     })),
   setIsGenerating: (isGenerating) => set({ isGenerating }),
   setError: (error) => set({ error }),
+  toggleTheme: () => set((state) => ({ theme: state.theme === 'light' ? 'dark' : 'light' })),
   goBack: () => set((state) => {
     if (state.appState === 'QUESTIONING') {
       if (state.conversation.steps.length === 0) {
